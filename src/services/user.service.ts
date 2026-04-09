@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import { userRepository } from '../repositories/user.repository';
 import { UserRole } from '../types/user';
+import { generateToken } from '../utils/jwt';
+
 
 export const userService = {
   async register(data: any) {
@@ -22,5 +24,31 @@ export const userService = {
     });
 
     return user;
+    },
+    
+  async login(data: any) {
+    const user = await userRepository.findByEmail(data.email);
+  
+    if (!user) {
+      throw new Error('Invalid credentials');
+    }
+  
+    if (!user.isActive) {
+      throw new Error('User is blocked');
+    }
+  
+    const isMatch = await bcrypt.compare(data.password, user.password);
+  
+    if (!isMatch) {
+      throw new Error('Invalid credentials');
+    }
+  
+    const token = generateToken({
+      userId: user.id,
+      role: user.role
+    });
+  
+    return token;
   }
 };
+
