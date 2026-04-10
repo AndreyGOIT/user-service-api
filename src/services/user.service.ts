@@ -25,7 +25,7 @@ export const userService = {
 
     return user;
     },
-    
+
   async login(data: any) {
     const user = await userRepository.findByEmail(data.email);
   
@@ -49,6 +49,38 @@ export const userService = {
     });
   
     return token;
+    },
+  
+  async getById(requester: any, userId: string) {
+  if (requester.role !== 'ADMIN' && requester.userId !== userId) {
+    throw new Error('Forbidden');
   }
+
+  const user = await userRepository.findById(userId);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  return user;
+},
+
+async getAll(requester: any) {
+  if (requester.role !== 'ADMIN') {
+    throw new Error('Forbidden');
+  }
+
+  return userRepository.findAll();
+},
+
+async blockUser(requester: any, userId: string) {
+  if (requester.role !== 'ADMIN' && requester.userId !== userId) {
+    throw new Error('Forbidden');
+  }
+
+  return userRepository.update(userId, {
+    isActive: false
+  });
+}
 };
 
