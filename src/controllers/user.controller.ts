@@ -1,17 +1,20 @@
-import { Response } from 'express';
-import { AuthRequest } from '../middlewares/auth.middleware';
-import { userService } from '../services/user.service';
+import { Response } from "express";
+import { AuthRequest } from "../middlewares/auth.middleware";
+import { userService } from "../services/user.service";
 
 export const userController = {
   async getById(req: AuthRequest, res: Response) {
     try {
       const userId = req.params.id as string;
 
-      const user = await userService.getById(req.user, userId);
+        const user = await userService.getById(req.user, userId);
+        
+        if (!user) throw new Error('User not found');
 
-      return res.json(user);
+      const { password, ...safeUser } = user;
+      return res.json(safeUser);
     } catch (error: any) {
-      return res.status(403).json({ message: error.message });
+      return res.status(404).json({ message: error.message });
     }
   },
 
@@ -19,7 +22,9 @@ export const userController = {
     try {
       const users = await userService.getAll(req.user);
 
-      return res.json(users);
+      const safeUsers = users.map(({ password, ...rest }) => rest);
+
+      return res.json(safeUsers);
     } catch (error: any) {
       return res.status(403).json({ message: error.message });
     }
@@ -27,13 +32,16 @@ export const userController = {
 
   async block(req: AuthRequest, res: Response) {
     try {
-        const userId = req.params.id as string;
-      
-        const user = await userService.blockUser(req.user, userId);
+      const userId = req.params.id as string;
 
-      return res.json(user);
+        const user = await userService.blockUser(req.user, userId);
+        
+        if (!user) throw new Error('User not found');
+
+      const { password, ...safeUser } = user;
+      return res.json(safeUser);
     } catch (error: any) {
-      return res.status(403).json({ message: error.message });
+      return res.status(404).json({ message: error.message });
     }
-  }
+  },
 };
